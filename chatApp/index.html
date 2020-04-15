@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Socket IO Chat App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+    <div id="app">
+        <h1>Hi from index.html</h1>
+        <div class="container">
+            <div class="card bg-info " style="width: 18rem;">
+                <!-- <img src="..." class="card-img-top" alt="..."> -->
+                <div class="card-body">
+                  <h5 class="card-title text-white">Chat App</h5>
+                  <!-- <p class="card-text text-white">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
+                </div>
+                <ul class="list-group list-group-flush">
+                    <small v-if="typing" class="text-white text-right"> User is typing..</small>
+                  <li class="list-group-item" v-for="message in messages">
+                     <span :class="{'float-right' : message.type === 0}">{{message.message}}</span>
+                    </li>
+                  </ul>
+                <div class="card-body">
+                    <form @submit.prevent="send">
+                        <div class="form-group">
+                          <label for="message">Message</label>
+                          <input type="text" class="form-control" v-model="message" aria-describedby="emailHelp" placeholder="Enter Message">
+                          </div>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                      </form>
+                  </div>
+              </div>
+        </div>
+    </div>
+    
+</html>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>
+<script>
+  var socket = io();
+  var app = new Vue({
+      el: '#app',
+      data:{
+        message:null,
+        messages:[],
+        typing:false
+      },
+      watch:{
+        message(value){
+            value ? socket.emit('typing') : socket.emit('stop-typing')
+        }
+      },
+      created(){
+          socket.emit('created', 'datastarttt')
+          socket.on('created', (data) => {
+              console.log(data)
+          })
+
+          socket.on('chat-message', (data) => {
+              console.log(data)
+              if(data.message == 'bodoh') data.message = 'baik'
+              this.messages.push({message:data.message, type:1})
+          })
+
+          socket.on('typing', ()=>{
+            this.typing = true
+          })
+
+          socket.on('stop-typing', ()=>{
+            this.typing = false
+          })
+      },
+      methods:{
+        send(){
+            this.message = {message:this.message, type:0}
+            this.messages.push(this.message)
+            socket.emit('chat-message', this.message)
+            this.message = null
+        }
+      }
+  })
+</script>
+</body>
